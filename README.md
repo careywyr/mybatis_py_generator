@@ -1,0 +1,2 @@
+# mybatis_py_generater
+简陋版本的mybatisGenerater，但自己用差不多够用了
