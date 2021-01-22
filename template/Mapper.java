@@ -1,9 +1,7 @@
 package {package};
 
-import org.apache.ibatis.annotations.Param;
-import tk.mybatis.mapper.common.BaseMapper;
-import {do_position}
-import java.util.List;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import {do_position};
 
 /**
  *

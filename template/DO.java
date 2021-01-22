@@ -1,14 +1,17 @@
 package {package};
 
-import com.alibaba.fastjson.annotation.JSONField;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.extension.activerecord.Model;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import org.apache.ibatis.type.Alias;
+import lombok.EqualsAndHashCode;
+import lombok.experimental.Accessors;
 
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Table;
 import java.io.Serializable;
-
+import java.util.Date;
 /**
  * <p>
  * {table_desc}
@@ -17,6 +20,8 @@ import java.io.Serializable;
  * @author {author}
  * @date {now}
  */
-@Table(name="{table_name}")
 @Data
-public class {do_name}
+@Accessors(chain = true)
+@TableName("{table_name}")
+@EqualsAndHashCode(callSuper = true)
+public class {do_name} extends Model<{do_name}>

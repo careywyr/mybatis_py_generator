@@ -7,10 +7,11 @@
 
 
 class ColumnPropVO(object):
-    def __init__(self, name, col_type, pri, desc):
+    def __init__(self, name, col_type, pri, desc, pri_type):
         self.name = name
         self.col_type = col_type
         self.pri = pri
         self.desc = desc
+        self.pri_type = pri_type
 
 
