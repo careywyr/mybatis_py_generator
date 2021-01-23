@@ -31,6 +31,7 @@ mapper_template = '../template/Mapper.java'
 mapper_xml_template = '../template/mapper.xml'
 service_template = '../template/Service.java'
 service_impl_template = '../template/ServiceImpl.java'
+controller_template = '../template/Controller.java'
 
 # 生成文件的包地址
 module_package = config.get('base', 'module_package')
@@ -39,16 +40,24 @@ vo_package = module_package + 'vo'
 mapper_package = module_package + 'dao'
 service_package = module_package + 'service'
 service_impl_package = module_package + 'service.impl'
+controller_package = module_package + 'controller'
 # 生成文件的目录
 module_dir_root = config.get('base', 'module_dir_root')
 do_dir_root = module_dir_root + 'entity/'
 vo_dir_root = module_dir_root + 'vo/'
 mapper_dir_root = module_dir_root + 'dao/'
+controller_dir_root = module_dir_root + 'controller/'
 service_dir_root = module_dir_root + 'service/'
 service_impl_dir_root = module_dir_root + 'service/impl/'
 xml_dir_root = config.get('base', 'xml_dir_root')
+# 几个工具类的包地址
+delete_flag_package = config.get('base', 'delete_flag_package')
+bean_wrapper_package = config.get('base', 'bean_wrapper_package')
+mp_update_wrapper_package = config.get('base', 'mp_update_wrapper_package')
+business_exception_package = config.get('base', 'business_exception_package')
 # 是否使用swagger
-use_swagger = True if config.get('base', 'use_swagger') is 1 else False
+print(config.get('base', 'use_swagger'))
+use_swagger = True if config.get('base', 'use_swagger') is '1' else False
 
 common_attr = ['createTime', 'modifyTime']
 
@@ -78,12 +87,12 @@ try:
                     new_line = line.format(package=do_package, author=author, now=now, table_name=table,
                                            do_name=entity_name, table_desc=table_desc)
                     java.write(new_line)
-                java.write(' {\n')
+                java.write(' {\n\n')
         # 写字段部分
         with open(do_file_path, 'a', encoding='utf8') as java:
             for field in fields:
                 if field.desc is not None and field.desc != '':
-                    java.writelines('   /** ' + field.desc + ' */\n')
+                    java.writelines('   /** \r\n    * ' + field.desc + '\r\n    */\n')
                 if field.pri:
                     if field.pri_type == 'auto_increment':
                         java.writelines('   @TableId(value = \"' + field.name + '\",type = IdType.AUTO)\n')
@@ -91,12 +100,12 @@ try:
                         java.writelines('   @TableId(\"' + field.name + '\")\n')
                 else:
                     java.writelines('   @TableField(\"' + field.name + '\")\n')
-                java.writelines('   private ' + field.col_type + ' ' + field.name + ';\n')
+                java.writelines('   private ' + field.col_type + ' ' + field.name + ';\n\n')
             java.write('}')
 
         # 写vo文件
         vo_file_path = vo_dir_root + entity_name + 'VO.java'
-        vo_class = entity_name + 'VO';
+        vo_class = entity_name + 'VO'
         # 先写一些公共的部分
         with open(vo_template, 'r') as do:
             with open(vo_file_path, 'w', encoding='utf8') as java:
@@ -109,9 +118,11 @@ try:
         with open(vo_file_path, 'a', encoding='utf8') as java:
             for field in fields:
                 if field.name not in common_attr:
+                    if field.desc is not None and field.desc != '':
+                        java.writelines('   /** \r\n    * ' + field.desc + '\r\n    */\n')
                     if use_swagger:
-                        java.writelines('    @ApiModelProperty(value = \"{}\")'.format(field.desc))
-                    java.writelines('   private ' + field.col_type + ' ' + field.name + ';\n')
+                        java.writelines('    @ApiModelProperty(value = \"{}\")\r\n'.format(field.desc))
+                    java.writelines('   private ' + field.col_type + ' ' + field.name + ';\n\n')
             java.write('}')
 
         # 写mapper.java
@@ -119,7 +130,7 @@ try:
         with open(mapper_template, 'r') as do:
             with open(mapper_file_path, 'w', encoding='utf8') as java:
                 for line in do.readlines():
-                    new_line = line.format(package=mapper_package, author=author, now=now, table_name=table,
+                    new_line = line.format(package=mapper_package, table_desc=table_desc, author=author, now=now, table_name=table,
                                            do_name=entity_name, mapperName=entity_name + 'Mapper',
                                            do_position=do_package + '.' + entity_name)
                     java.write(new_line)
@@ -146,25 +157,57 @@ try:
                                            vo_name=vo_name,
                                            service_name=entity_name + 'Service',
                                            do_position=do_package + '.' + entity_name,
+                                           table_desc=table_desc,
                                            vo_position=vo_package + '.' + entity_name + 'VO')
                     if '>' in new_line:
                         new_line = new_line + '{'
                     java.write(new_line)
                 java.write('}')
 
-        # service_impl_file_path = service_impl_dir_root + entity_name + 'ServiceImpl.java'
-        # with open(service_impl_template, 'r') as do:
-        #     with open(service_impl_file_path, 'w', encoding='utf8') as java:
-        #         for line in do.readlines():
-        #             new_line = line.format(package=mapper_package, author=author, now=now,
-        #                                    do_name=entity_name,
-        #                                    vo_class=vo_class,
-        #                                    vo_name=vo_name,
-        #                                    service_name=entity_name + 'Service',
-        #                                    do_position=do_package + entity_name,
-        #                                    vo_position=vo_package + entity_name + 'VO')
-        #             java.write(new_line)
+        # 写serviceImpl.java
+        service_impl_file_path = service_impl_dir_root + entity_name + 'ServiceImpl.java'
+        service_name = util.firstCharLower(entity_name) + 'Service'
+        with open(service_impl_template, 'r') as do:
+            with open(service_impl_file_path, 'w', encoding='utf8') as java:
+                for line in do.readlines():
+                    new_line = line.format(package=service_impl_package, author=author, now=now,
+                                           table_desc=table_desc,
+                                           entity_class=entity_name,
+                                           service_impl_class=entity_name + 'ServiceImpl',
+                                           vo_class=vo_class,
+                                           vo_name=vo_name,
+                                           business_exception_package=business_exception_package,
+                                           mapper_class=entity_name + 'Mapper',
+                                           service_class=entity_name + 'Service',
+                                           service_name=service_name,
+                                           do_position=do_package + '.' + entity_name,
+                                           mapper_position=mapper_package + '.' + entity_name + 'Mapper',
+                                           service_position=service_package + '.' + entity_name + 'Service',
+                                           delete_flag_package=delete_flag_package,
+                                           bean_wrapper_package=bean_wrapper_package,
+                                           mp_update_wrapper_package=mp_update_wrapper_package,
+                                           vo_position=vo_package + '.' + entity_name + 'VO')
+                    new_line = new_line.replace('%', '{')
+                    new_line = new_line.replace('!', '}')
+                    java.write(new_line)
 
+        controller_file_path = controller_dir_root + entity_name + 'Controller.java'
+        controller_name = util.firstCharLower(entity_name) + 'Controller'
+        with open(controller_template, 'r') as do:
+            with open(controller_file_path, 'w', encoding='utf8') as java:
+                for line in do.readlines():
+                    new_line = line.format(package=controller_package, author=author, now=now,
+                                           table_desc=table_desc,
+                                           controller_class=entity_name + 'Controller',
+                                           vo_class=vo_class,
+                                           vo_name=vo_name,
+                                           service_class=entity_name + 'Service',
+                                           service_name=service_name,
+                                           service_position=service_package + '.' + entity_name + 'Service',
+                                           vo_position=vo_package + '.' + entity_name + 'VO')
+                    new_line = new_line.replace('%', '{')
+                    new_line = new_line.replace('!', '}')
+                    java.write(new_line)
         print("处理表{}结束".format(table))
 
 

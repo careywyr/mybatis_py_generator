@@ -8,7 +8,7 @@ import javax.validation.constraints.NotNull;
 
 /**
  * <p>
- * {table_desc}
+ * {table_desc} VO
  * </p>
  *
  * @author {author}
